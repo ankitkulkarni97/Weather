@@ -110,7 +110,7 @@ extension CitySearchViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "CitySearchCell"), self.searchResults.count > indexPath.row else {
-            fatalError("This should not be nill")
+            fatalError("This should not be nil")
         }
         cell.textLabel?.text = self.searchResults[indexPath.row].title
         cell.detailTextLabel?.text = self.searchResults[indexPath.row].subtitle

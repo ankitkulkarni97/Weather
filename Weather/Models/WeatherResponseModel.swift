@@ -9,6 +9,7 @@ import Foundation
 
 // MARK: - WeatherResponseModel
 struct WeatherResponseModel: Codable {
+    var isFavourite: Bool?
     var coord: Coord?
     var weather: [Weather]?
     var base: String?

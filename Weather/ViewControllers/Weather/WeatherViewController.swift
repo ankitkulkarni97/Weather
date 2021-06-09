@@ -29,6 +29,7 @@ class  WeatherViewController: UIViewController {
     @IBOutlet weak var weatherDescriptionLabel: UILabel!
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    @IBOutlet weak var favouriteButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -70,6 +71,7 @@ class  WeatherViewController: UIViewController {
         setHumidityLabelText()
         setSunriseLabelText()
         setSunsetLabelText()
+        setFavouriteButtonImage(isFavourite: self.viewModel.weatherData?.isFavourite ?? false)
         self.weatherDescriptionLabel.text = self.viewModel.weatherData?.weather?.first?.main
         self.activityIndicator.stopAnimating()
         self.activityIndicator.isHidden = true
@@ -154,6 +156,8 @@ class  WeatherViewController: UIViewController {
     
 }
 
+//MARK: CitySearchVC related functions
+
 extension WeatherViewController: CitySearchViewControllerDelegate {
     @IBAction func didTapSearchButton() {
         guard let citySearchVC = UIStoryboard(name: "CitySearchViewController", bundle: nil).instantiateInitialViewController() as? CitySearchViewController else {
@@ -179,3 +183,62 @@ extension WeatherViewController: CitySearchViewControllerDelegate {
         self.viewModel.place = place
     }
 }
+
+//MARK: Favourite related functions
+
+extension WeatherViewController {
+    
+    @IBAction func didTapFavouritesButton() {
+        guard let place = self.viewModel.place else {
+            fatalError("Place name cannot be nil")
+        }
+        if (self.viewModel.weatherData?.isFavourite ?? false) {
+            self.viewModel.weatherData?.isFavourite = false
+            setFavouriteButtonImage(isFavourite: false)
+            self.viewModel.favourites.removeValue(forKey: place)
+        } else {
+            self.viewModel.weatherData?.isFavourite = true
+            setFavouriteButtonImage(isFavourite: true)
+            self.viewModel.favourites[place] = self.viewModel.weatherData
+        }
+    }
+    
+    func setFavouriteButtonImage(isFavourite: Bool) {
+        if isFavourite {
+            self.favouriteButton.setImage(UIImage(systemName: "suit.heart.fill"), for: .normal)
+            self.favouriteButton.tintColor = .systemRed
+        } else {
+            self.favouriteButton.setImage(UIImage(systemName: "suit.heart"), for: .normal)
+            self.favouriteButton.tintColor = .white
+        }
+    }
+}
+
+//MARK: Favourites VC related functions
+
+extension WeatherViewController: FavouritesViewControllerDelegate {
+    
+    @IBAction func didTapFavouritesMenu() {
+        guard let favouritesVC = UIStoryboard(name: "FavouritesViewController", bundle: nil).instantiateInitialViewController() as? FavouritesViewController else {
+            return
+        }
+        let places = Array(self.viewModel.favourites.keys)
+        let favouritesVM = FavouritesViewModel(favourites: places)
+        favouritesVC.viewModel = favouritesVM
+        favouritesVC.delegate = self
+        self.navigationController?.pushViewController(favouritesVC, animated: true)
+    }
+    
+    func didSelectPlace(place: String) {
+        guard let weatherData = self.viewModel.favourites[place] else {
+            //error handle
+            return
+        }
+        self.viewModel.weatherData = weatherData
+        self.viewModel.place = place
+        self.activityIndicator.isHidden = false
+        self.activityIndicator.startAnimating()
+        self.populateUI()
+    }
+}
+

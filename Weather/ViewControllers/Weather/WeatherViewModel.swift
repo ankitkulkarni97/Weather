@@ -14,6 +14,7 @@ class WeatherViewModel {
     var didFetchWeatherDataFail: ((Error?) -> Void)?
     var weatherData: WeatherResponseModel?
     var place: String?
+    var favourites = [String: WeatherResponseModel]()
     
     func fetchWeatherData(for coordinates: CLLocationCoordinate2D) {
         let serviceManager = ServiceManagerImplementation()
