@@ -9,9 +9,19 @@ import Foundation
 import UIKit
 import MapKit
 
+/*Initial location is hardcoded as Bengaluru to avoid location tracking by the app.
+ Google Places API could not be used due to API key issue. MapKit does not provide a filter to fetch results of cities only.
+ Hence, addresses other than cities are shown during autocomplete. However, the weather data for all locations is fetched accurately. */
+
+/*
+ This is the home screen of the app where the weather data is displayed.
+ */
+
 class  WeatherViewController: UIViewController {
     
     let viewModel = WeatherViewModel()
+    let initialCoordinates = CLLocationCoordinate2D(latitude: 12.9774047, longitude: 77.5742339)
+    let initialPlace = "Bengaluru"
     
     @IBOutlet weak var minTempStackView: UIStackView!
     @IBOutlet weak var maxTempStackView: UIStackView!
@@ -35,6 +45,7 @@ class  WeatherViewController: UIViewController {
         super.viewDidLoad()
         self.customizeUI()
         self.bind()
+        self.didGetCoordinatesForPlace(place: initialPlace, coordinates: initialCoordinates)
     }
     
     func bind() {
@@ -231,7 +242,6 @@ extension WeatherViewController: FavouritesViewControllerDelegate {
     
     func didSelectPlace(place: String) {
         guard let weatherData = self.viewModel.favourites[place] else {
-            //error handle
             return
         }
         self.viewModel.weatherData = weatherData

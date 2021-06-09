@@ -9,7 +9,9 @@ import Foundation
 import UIKit
 import MapKit
 
-
+/*
+ The autocomplete search view controller to search for locations.
+ */
 class CitySearchViewController: UIViewController {
     
     var searchCompleter: MKLocalSearchCompleter?
@@ -95,10 +97,6 @@ extension CitySearchViewController: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         searchResults = completer.results
         tableView.reloadData()
-    }
-    
-    private func completer(completer: MKLocalSearchCompleter, didFailWithError error: NSError) {
-        // handle error
     }
 }
 

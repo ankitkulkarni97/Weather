@@ -20,6 +20,9 @@ class WeatherViewModel {
         let serviceManager = ServiceManagerImplementation()
         serviceManager.getWeatherData(lattitude: coordinates.latitude, longitude: coordinates.longitude, success: { [weak self] weatherData in
             self?.weatherData = weatherData
+            if let place = self?.place, self?.favourites[place] != nil {
+                self?.weatherData?.isFavourite = true
+            }
             self?.didFetchWeatherDataSucceed?()
         }, failure: { [weak self] error in
             self?.didFetchWeatherDataFail?(error)

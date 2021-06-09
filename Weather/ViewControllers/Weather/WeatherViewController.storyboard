@@ -317,7 +317,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="background" width="1035.5" height="1903.5"/>
+        <image name="background" width="750.5" height="1265.5"/>
         <image name="magnifyingglass" catalog="system" width="128" height="115"/>
         <image name="side_menu" width="18" height="18"/>
         <image name="suit.heart" catalog="system" width="128" height="109"/>

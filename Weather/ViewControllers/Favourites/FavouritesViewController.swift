@@ -8,6 +8,9 @@
 import Foundation
 import UIKit
 
+/*
+ List of favourites displayed in a UITableView
+ */
 class FavouritesViewController: UIViewController {
     
     @IBOutlet weak var tableView: UITableView!
