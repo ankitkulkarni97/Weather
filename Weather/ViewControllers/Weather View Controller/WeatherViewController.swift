@@ -7,8 +7,11 @@
 
 import Foundation
 import UIKit
+import MapKit
 
 class  WeatherViewController: UIViewController {
+    
+    let viewModel = WeatherViewModel()
     
     @IBOutlet weak var minTempStackView: UIStackView!
     @IBOutlet weak var maxTempStackView: UIStackView!
@@ -17,10 +20,31 @@ class  WeatherViewController: UIViewController {
     @IBOutlet weak var sunsetStackView: UIStackView!
     @IBOutlet weak var humidityStackView: UIStackView!
     @IBOutlet weak var cityNameLabel: UILabel!
+    @IBOutlet weak var minTempLabel: UILabel!
+    @IBOutlet weak var maxTempLabel: UILabel!
+    @IBOutlet weak var feelsLikeLabel: UILabel!
+    @IBOutlet weak var sunriseLabel: UILabel!
+    @IBOutlet weak var sunsetLabel: UILabel!
+    @IBOutlet weak var humidityLabel: UILabel!
+    @IBOutlet weak var weatherDescriptionLabel: UILabel!
+    @IBOutlet weak var temperatureLabel: UILabel!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.customizeUI()
+        self.bind()
+    }
+    
+    func bind() {
+
+        self.viewModel.didFetchWeatherDataSucceed = { [weak self] in
+            self?.populateUI()
+        }
+        
+        self.viewModel.didFetchWeatherDataFail = { [weak self] error in
+            self?.showAlert(error: error)
+        }
     }
     
     func customizeUI() {
@@ -33,17 +57,125 @@ class  WeatherViewController: UIViewController {
         humidityStackView.backgroundColor = stackViewBgndColour
         feelsLikeStackView.backgroundColor = stackViewBgndColour
         cityNameLabel.backgroundColor = labelBgndColour
+        self.activityIndicator.hidesWhenStopped = true
+        self.activityIndicator.isHidden = true
+    }
+    
+    func populateUI() {
+        self.cityNameLabel.text = self.viewModel.place
+        setTemperatureLabelText()
+        setMinTempLabelText()
+        setMaxTempLabelText()
+        setFeelsLikeLabelText()
+        setHumidityLabelText()
+        setSunriseLabelText()
+        setSunsetLabelText()
+        self.weatherDescriptionLabel.text = self.viewModel.weatherData?.weather?.first?.main
+        self.activityIndicator.stopAnimating()
+        self.activityIndicator.isHidden = true
+    }
+    
+    func setTemperatureLabelText() {
+        guard let temperature = self.viewModel.weatherData?.main?.temp else {
+            self.temperatureLabel.text = "-"
+            return
+        }
+        self.temperatureLabel.text = "\(temperature)º"
+    }
+    
+    func setMinTempLabelText() {
+        guard let temperature = self.viewModel.weatherData?.main?.tempMin else {
+            self.minTempLabel.text = "-"
+            return
+        }
+        self.minTempLabel.text = "\(temperature)º"
+    }
+    
+    func setMaxTempLabelText() {
+        guard let temperature = self.viewModel.weatherData?.main?.tempMax else {
+            self.maxTempLabel.text = "-"
+            return
+        }
+        self.maxTempLabel.text = "\(temperature)º"
+    }
+    
+    func setFeelsLikeLabelText() {
+        guard let temperature = self.viewModel.weatherData?.main?.feelsLike else {
+            self.feelsLikeLabel.text = "-"
+            return
+        }
+        self.feelsLikeLabel.text = "\(temperature)º"
+    }
+    
+    func setHumidityLabelText() {
+        guard let humidity = self.viewModel.weatherData?.main?.humidity else {
+            self.humidityLabel.text = "-"
+            return
+        }
+        self.humidityLabel.text = "\(humidity)%"
+    }
+    
+    func setSunriseLabelText() {
+        guard let sunriseEpoch = self.viewModel.weatherData?.sys?.sunrise else {
+            self.sunriseLabel.text = "-"
+            return
+        }
+        let time  = Date(timeIntervalSince1970: sunriseEpoch)
+        let dateFormatter = DateFormatter()
+        let timezone = TimeZone(secondsFromGMT: self.viewModel.weatherData?.timezone ?? 0)
+        dateFormatter.timeZone = timezone
+        dateFormatter.timeStyle = .short
+        let sunriseTime = dateFormatter.string(from: time)
+        self.sunriseLabel.text = sunriseTime
+    }
+    
+    func setSunsetLabelText() {
+        guard let sunsetEpoch = self.viewModel.weatherData?.sys?.sunset else {
+            self.sunsetLabel.text = "-"
+            return
+        }
+        let time  = Date(timeIntervalSince1970: sunsetEpoch)
+        let dateFormatter = DateFormatter()
+        let timezone = TimeZone(secondsFromGMT: self.viewModel.weatherData?.timezone ?? 0)
+        dateFormatter.timeZone = timezone
+        dateFormatter.timeStyle = .short
+        let sunsetTime = dateFormatter.string(from: time)
+        self.sunsetLabel.text = sunsetTime
+    }
+    
+    func showAlert(error: Error?) {
+        let alertVC = UIAlertController(title: "Error", message: error.debugDescription, preferredStyle: .alert)
+        let alertAction  = UIAlertAction(title: "OK", style: .default, handler: { _ in
+            alertVC.dismiss(animated: true, completion: nil)
+        })
+        alertVC.addAction(alertAction)
+        self.present(alertVC, animated: true, completion: nil)
     }
     
 }
 
-extension WeatherViewController {
-    func didSearchCity() {
-//        let autocompleteVC = GMSAutocompleteViewController()
-//        let filter = GMSAutocompleteFilter()
-//        filter.type = .city
-//        autocompleteVC.autocompleteFilter = filter
-//        autocompleteVC.delegate = self
-//        self.present(autocompleteVC, animated: true, completion: nil)
+extension WeatherViewController: CitySearchViewControllerDelegate {
+    @IBAction func didTapSearchButton() {
+        guard let citySearchVC = UIStoryboard(name: "CitySearchViewController", bundle: nil).instantiateInitialViewController() as? CitySearchViewController else {
+            return
+        }
+        citySearchVC.delegate = self
+        self.present(citySearchVC, animated: true, completion: nil)
+    }
+    
+    func didFailToGetCoordinates() {
+        let alertVC = UIAlertController(title: "Error", message: "Failed to fetch weather data.", preferredStyle: .alert)
+        let alertAction  = UIAlertAction(title: "OK", style: .default, handler: { _ in
+            alertVC.dismiss(animated: true, completion: nil)
+        })
+        alertVC.addAction(alertAction)
+        self.present(alertVC, animated: true, completion: nil)
+    }
+    
+    func didGetCoordinatesForPlace(place: String, coordinates: CLLocationCoordinate2D) {
+        self.activityIndicator.isHidden = false
+        self.activityIndicator.startAnimating()
+        self.viewModel.fetchWeatherData(for: coordinates)
+        self.viewModel.place = place
     }
 }

@@ -52,7 +52,7 @@ struct Sys: Codable {
     var type, id: Int?
     var message: Double?
     var country: String?
-    var sunrise, sunset: Int?
+    var sunrise, sunset: Double?
 }
 
 // MARK: - Weather

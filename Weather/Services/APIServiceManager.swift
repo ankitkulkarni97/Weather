@@ -8,20 +8,27 @@
 import Foundation
 
 protocol  ServiceManager {
-    func getWeatherData(for city: String, success: @escaping (WeatherResponseModel?) -> Void, failure: @escaping (Error) -> Void)
+    func getWeatherData(lattitude: Double, longitude: Double, success: @escaping (WeatherResponseModel?) -> Void, failure: @escaping (Error?) -> Void)
 }
 
 class ServiceManagerImplementation: ServiceManager {
-    func getWeatherData(for city: String, success: @escaping (WeatherResponseModel?) -> Void, failure: @escaping (Error) -> Void) {
-        guard let url = URL(string: Constants.Urls.getOpenWeatherUrl(for: city)) else {
+    func getWeatherData(lattitude: Double, longitude: Double, success: @escaping (WeatherResponseModel?) -> Void, failure: @escaping (Error?) -> Void) {
+        guard let url = URL(string: Constants.Urls.getOpenWeatherUrl(lattitude: lattitude, longitude: longitude)) else {
             return
         }
         let urlRequest = URLRequest(url: url)
         URLSession.shared.dataTask(with: urlRequest) { (data, response, error) in
         guard let data = data else { return }
+            if error != nil {
+                DispatchQueue.main.async {
+                    failure(error)
+                }
+            }
             do {
                 let weatherData = try JSONDecoder().decode(WeatherResponseModel.self, from: data)
-                success(weatherData)
+                DispatchQueue.main.async {
+                    success(weatherData)
+                }
             } catch let error {
                  print(error)
             }
